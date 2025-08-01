@@ -1,4 +1,4 @@
-task copyApplication(type: Sync) {
+tasks.register('copyApplication', Sync) {
     def installDistTask = project(':org.xtext.example.mydsl.ide').tasks.installDist
     dependsOn installDistTask
     from installDistTask.outputs
@@ -13,7 +13,8 @@ clean {
 
 npmInstall.dependsOn copyApplication
 
-task installExtension(type: Exec, dependsOn: vscodeExtension) {
+tasks.register('installExtension', Exec) {
+    dependsOn vscodeExtension
     if (System.properties['os.name'].toLowerCase().contains('windows')) {
         commandLine 'code.cmd'
     } else {
@@ -22,7 +23,8 @@ task installExtension(type: Exec, dependsOn: vscodeExtension) {
     args '--install-extension', vscodeExtension.destPath
 }
 
-task startCode(type:Exec, dependsOn: installExtension) {
+tasks.register('startCode', Exec) {
+    dependsOn installExtension
     if (System.properties['os.name'].toLowerCase().contains('windows')) {
         commandLine 'code.cmd'
     } else {

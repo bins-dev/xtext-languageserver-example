@@ -1,17 +1,17 @@
 {
-    "name": "xtext-vscode-example",
+    "name": "xtext-st-dsl",
     "displayName": "Xtext for ST DSL",
     "description": "a StructuredText DSL implementation using Xtext framework for VS Code",
-    "version": "0.0.32",
-    "publisher": "xtext",
+    "version": "0.1.0",
+    "publisher": "bins",
     "icon": "images/xtext.png",
     "license": "EPL-1.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/xtext/xtext-languageserver-example.git"
+        "url": "https://github.com/bins-dev/xtext-languageserver-example/tree/st"
     },
     "bugs": {
-        "url": "https://github.com/xtext/xtext-languageserver-example/issues"
+        "url": "https://github.com/bins-dev/xtext-languageserver-example/issues"
     },
     "engines": {
         "vscode": "^1.102.0"

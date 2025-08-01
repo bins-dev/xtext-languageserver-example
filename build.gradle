@@ -1,3 +1,5 @@
+import com.github.gradle.node.NodePlugin
+
 buildscript {
 	repositories {
 		mavenCentral()
@@ -99,7 +101,7 @@ configure(subprojects.findAll { it.name.startsWith('vscode') }) {
 
 }
 
-plugins.withType(com.github.gradle.node.NodePlugin) {
+plugins.withType(NodePlugin) {
 	node {
 		workDir = file("$rootProject.buildDir/nodejs")
 	}
@@ -114,10 +116,8 @@ updateVersion {
 				new File('vscode-extension', 'package.json'),
 				new File('vscode-extension-self-contained', 'package.json'),
 		]
-
 		// String replacements - isn't long enough to justify advanced code ;)
 		filesToUpdate.forEach { file ->
-
 			String text = file.getText(encoding)
 			text = text.replaceAll("\"version\": \"$versionPattern\",", "\"version\": \"$project.version\",")
 			file.setText(text, encoding)
