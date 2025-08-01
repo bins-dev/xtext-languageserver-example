@@ -21,7 +21,7 @@ configure(subprojects.findAll { it.name.startsWith('org.xtext') }) {
 	repositories {
 		mavenCentral()
 	}
-	
+
 	apply plugin: 'java-library'
 	dependencies {
 		api platform("org.eclipse.xtext:xtext-dev-bom:${xtextVersion}")
@@ -30,15 +30,15 @@ configure(subprojects.findAll { it.name.startsWith('org.xtext') }) {
 	apply from: "${rootDir}/gradle/source-layout.gradle"
 	apply plugin: 'eclipse'
 	apply plugin: 'idea'
-	
+
 	group = 'org.xtext.example.mydsl'
 	version = '1.0.0-SNAPSHOT'
-	
+
 	java {
 		sourceCompatibility = JavaVersion.VERSION_17
 		targetCompatibility = JavaVersion.VERSION_17
 	}
-	
+
 	configurations.all {
 		exclude group: 'asm'
 	}
@@ -56,8 +56,8 @@ configure(subprojects.findAll { it.name.startsWith('vscode') }) {
 	}
 
 	def inputFiles = fileTree(
-		dir: projectDir, 
-		excludes: [ 'out/**', '.gitignore', '.gradle/**', 'build/**', '*.gradle' ]
+			dir: projectDir,
+			excludes: [ 'out/**', '.gitignore', '.gradle/**', 'build/**', '*.gradle' ]
 	)
 
 	npmInstall {
@@ -65,18 +65,27 @@ configure(subprojects.findAll { it.name.startsWith('vscode') }) {
 		outputs.dir('out')
 	}
 
-	task vscodeExtension(dependsOn: [npmInstall], type: NodeTask) {
+	task vscodeExtension(dependsOn: [npmInstall], type: Exec) {
 		ext.destDir = new File(buildDir, 'vscode')
 		ext.archiveName = "$project.name-${project.version}.vsix"
 		ext.destPath = "$destDir/$archiveName"
+
 		outputs.dir destDir
+		outputs.file destPath
+
 		doFirst {
 			destDir.mkdirs()
 		}
-		script = file("node_modules/.bin/vsce")
-		args = [ 'package', '--out', destPath ]
-		execOverrides {
-			workingDir = projectDir
+
+		workingDir projectDir  // 设置工作目录
+
+		// Windows 命令
+		if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+			commandLine 'cmd', '/c', 'node_modules\\.bin\\vsce.cmd', 'package', '--out', destPath
+		}
+		// Linux/Mac 命令
+		else {
+			commandLine 'node_modules/.bin/vsce', 'package', '--out', destPath
 		}
 	}
 
@@ -85,7 +94,7 @@ configure(subprojects.findAll { it.name.startsWith('vscode') }) {
 			delete vscodeExtension.destDir
 			delete 'out' // output of npmInstall - don't want to delete node_modules
 		}
-		
+
 	}
 
 }
@@ -97,29 +106,29 @@ plugins.withType(com.github.gradle.node.NodePlugin) {
 }
 
 updateVersion {
-		doLast {
-			// custom code
-			def versionPattern = /\d+.\d+(.\d+)?/
-			def encoding = 'UTF-8'
-			def filesToUpdate = [
+	doLast {
+		// custom code
+		def versionPattern = /\d+.\d+(.\d+)?/
+		def encoding = 'UTF-8'
+		def filesToUpdate = [
 				new File('vscode-extension', 'package.json'),
 				new File('vscode-extension-self-contained', 'package.json'),
-			]
+		]
 
-			// String replacements - isn't long enough to justify advanced code ;)
-			filesToUpdate.forEach { file ->
+		// String replacements - isn't long enough to justify advanced code ;)
+		filesToUpdate.forEach { file ->
 
-				String text = file.getText(encoding)
-				text = text.replaceAll("\"version\": \"$versionPattern\",", "\"version\": \"$project.version\",")
-				file.setText(text, encoding)
-			}
+			String text = file.getText(encoding)
+			text = text.replaceAll("\"version\": \"$versionPattern\",", "\"version\": \"$project.version\",")
+			file.setText(text, encoding)
 		}
 	}
+}
 
 release {
-    tagTemplate = 'v${version}'
+	tagTemplate = 'v${version}'
 	preTagCommitMessage = '[release] pre tag commit: '
-    tagCommitMessage = '[release] creating tag: '
-    newVersionCommitMessage = '[release] new version commit: '
-    failOnSnapshotDependencies = false
+	tagCommitMessage = '[release] creating tag: '
+	newVersionCommitMessage = '[release] new version commit: '
+	failOnSnapshotDependencies = false
 }

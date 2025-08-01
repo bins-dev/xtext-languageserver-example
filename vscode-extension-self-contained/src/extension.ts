@@ -3,7 +3,7 @@
 import * as path from 'path';
 import * as os from 'os';
 
-import {Trace} from 'vscode-jsonrpc';
+import { Trace } from 'vscode-jsonrpc';
 import { commands, window, workspace, ExtensionContext, Uri } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node';
 
@@ -12,24 +12,41 @@ let lc: LanguageClient;
 export function activate(context: ExtensionContext) {
     // The server is a locally installed in src/mydsl
     let launcher = os.platform() === 'win32' ? 'mydsl-standalone.bat' : 'mydsl-standalone';
-    let script = context.asAbsolutePath(path.join('src', 'mydsl', 'bin', launcher));
+    const script = context.asAbsolutePath(path.join('src', 'mydsl', 'bin', launcher));
 
-    let serverOptions: ServerOptions = {
-        run : { command: script },
-        debug: { command: script, args: [], options: { env: createDebugEnv() } }
-    };
-    
+    let serverOptions: ServerOptions;
+    if (os.platform() === 'win32') {
+        serverOptions = {
+            run: {
+                command: "cmd.exe",
+                args: ["/c", script],
+            },
+            debug: {
+                command: "cmd.exe",
+                args: ["/c", script],
+                options: {
+                    env: createDebugEnv()
+                }
+            }
+        };
+    } else {
+        serverOptions = {
+            run: { command: script },
+            debug: { command: script, args: [], options: { env: createDebugEnv() } }
+        };
+    }
+
     let clientOptions: LanguageClientOptions = {
         documentSelector: [{ scheme: 'file', language: 'st' }],
         synchronize: {
             fileEvents: workspace.createFileSystemWatcher('**/*.st')
         }
     };
-    
+
     // Create the language client and start the client.
     lc = new LanguageClient('Xtext Server', serverOptions, clientOptions);
-    
-    var disposable2 =commands.registerCommand("mydsl.a.proxy", async () => {
+
+    var disposable2 = commands.registerCommand("mydsl.a.proxy", async () => {
         let activeEditor = window.activeTextEditor;
         if (!activeEditor || !activeEditor.document || activeEditor.document.languageId !== 'st') {
             return;
@@ -40,7 +57,7 @@ export function activate(context: ExtensionContext) {
         }
     })
     context.subscriptions.push(disposable2);
-    
+
     // enable tracing (.Off, .Messages, Verbose)
     lc.setTrace(Trace.Verbose);
     lc.start();
@@ -50,6 +67,6 @@ export function deactivate() {
 }
 function createDebugEnv() {
     return Object.assign({
-        JAVA_OPTS:"-Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=8000,suspend=n,quiet=y"
+        JAVA_OPTS: "-Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=8000,suspend=n,quiet=y"
     }, process.env)
 }
