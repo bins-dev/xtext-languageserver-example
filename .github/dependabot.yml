@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directories:
+      - "/vscode-extension"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "npm"
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: "npm"
+    directories:
+      - "/vscode-extension-self-contained"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "npm"
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
