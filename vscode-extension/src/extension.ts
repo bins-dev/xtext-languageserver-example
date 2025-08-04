@@ -24,9 +24,9 @@ export function activate(context: ExtensionContext) {
     };
     
     let clientOptions: LanguageClientOptions = {
-        documentSelector: ['mydsl'],
+        documentSelector: [{ scheme: 'file', language: 'st' }],
         synchronize: {
-            fileEvents: workspace.createFileSystemWatcher('**/*.*')
+            fileEvents: workspace.createFileSystemWatcher('**/*.st')
         }
     };
     

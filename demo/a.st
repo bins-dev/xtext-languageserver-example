@@ -27,7 +27,7 @@ END_FOR;
 CASE i OF
 0:i:=1;
 1:i:=2;
-// test value from another file
-0:iii:=3;
 END_CASE;
+// test value from another file
+iii:=3;
 RETURN;

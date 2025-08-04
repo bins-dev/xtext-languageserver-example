@@ -1,17 +1,17 @@
 {
-    "name": "xtext-vscode-example",
+    "name": "xtext-st-dsl-client",
     "displayName": "Xtext VS Code example",
-    "description": "A simple DSL example for VS Code",
-    "version": "0.1.0",
-    "publisher": "xtext",
+    "description": "a simple ST DSL client for VS Code",
+    "version": "0.1.1",
+    "publisher": "bins",
     "icon": "images/xtext.png",
     "license": "EPL-1.0",
     "repository": {
         "type": "git",
-        "url": "https://github.com/xtext/xtext-languageserver-example.git"
+        "url": "https://github.com/bins-dev/xtext-languageserver-example/tree/st"
     },
     "bugs": {
-        "url": "https://github.com/xtext/xtext-languageserver-example/issues"
+        "url": "https://github.com/bins-dev/xtext-languageserver-example/issues"
     },
     "engines": {
         "vscode": "^1.102.0"
@@ -20,26 +20,26 @@
         "Programming Languages"
     ],
     "activationEvents": [
-        "onLanguage:mydsl"
+        "onLanguage:st"
     ],
     "main": "out/extension",
     "contributes": {
         "languages": [
             {
-                "id": "mydsl",
+                "id": "st",
                 "aliases": [
-                    "mydsl"
+                    "StructuredText"
                 ],
                 "extensions": [
-                    ".mydsl"
+                    ".st"
                 ],
                 "configuration": "./mydsl.configuration.json"
             }
         ],
         "grammars": [
             {
-                "language": "mydsl",
-                "scopeName": "text.mydsl",
+                "language": "st",
+                "scopeName": "text.st",
                 "path": "./syntaxes/mydsl.tmLanguage.json"
             }
         ],

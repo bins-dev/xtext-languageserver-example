@@ -1,8 +1,8 @@
 {
-	"name": "MyDsl",
-    "scopeName": "text.mydsl",
+	"name": "StructuredText",
+    "scopeName": "text.st",
     "fileTypes": [
-        "mydsl"
+        "st"
     ],
     "repository": {
         "general": {
@@ -19,20 +19,19 @@
             ]
         },
         "linecomment": {
-            "name": "comment.line.double-dash.mydsl",
+            "name": "comment.line.double-dash.st",
             "begin": "(^[ \\t]+)?(?=//)",
 			"end": "(?=$)"
         },
         "blockcomment": {
-            "name": "comment.block.mydsl",
+            "name": "comment.block.st",
             "begin": "/\\*(\\*)?(?!/)",
 			"end": "\\*/"
         },
         
         "keyword": {
-            "name": "keyword.control.mydsl",
-            "match": "\\b(Hello|from)\\b|!"
-
+            "name": "keyword.control.st",
+            "match": "\\b(VAR|END_VAR|IF|THEN|ELSIF|ELSE|END_IF|WHILE|DO|END_WHILE|FOR|TO|END_FOR|CASE|OF|END_CASE|RETURN|DINT|INT|SINT|LINT|UINT|USINT|UDINT|ULINT|REAL|LREAL|STRING|WSTRING|CHAR|WCHAR|TIME|LTIME|TIME_OF_DAY|LTIME_OF_DAY|TOD|LTOD|DATE|LDATE|DATE_AND|TIME|LDATE_AND_TIME|BOOL|LWORD|DWORD|WORD|BYTE|FALSE|TRUE|ARRAY)\\b|!"
         }
     },
     "patterns": [
