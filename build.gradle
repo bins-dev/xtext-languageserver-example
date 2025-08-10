@@ -67,7 +67,7 @@ configure(subprojects.findAll { it.name.startsWith('vscode') }) {
 		outputs.dir('out')
 	}
 
-	task vscodeExtension(dependsOn: [npmInstall], type: Exec) {
+	task vscodeExtension4Windows(dependsOn: [npmInstall], type: Exec) {
 		ext.destDir = new File(buildDir, 'vscode')
 		ext.archiveName = "$project.name-${project.version}.vsix"
 		ext.destPath = "$destDir/$archiveName"
@@ -85,11 +85,22 @@ configure(subprojects.findAll { it.name.startsWith('vscode') }) {
 		if (System.getProperty('os.name').toLowerCase().contains('windows')) {
 			commandLine 'cmd', '/c', 'node_modules\\.bin\\vsce.cmd', 'package', '--out', destPath
 		}
-		// Linux/Mac 命令
-		else {
-			commandLine 'node_modules/.bin/vsce', 'package', '--out', destPath
-		}
 	}
+
+    task vscodeExtension(dependsOn: [npmInstall], type: NodeTask) {
+        ext.destDir = new File(buildDir, 'vscode')
+        ext.archiveName = "$project.name-${project.version}.vsix"
+        ext.destPath = "$destDir/$archiveName"
+        outputs.dir destDir
+        doFirst {
+            destDir.mkdirs()
+        }
+        script = file("node_modules/.bin/vsce")
+        args = [ 'package', '--out', destPath ]
+        execOverrides {
+            workingDir = projectDir
+        }
+    }
 
 	task clean {
 		doLast {
