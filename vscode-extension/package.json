@@ -1,7 +1,7 @@
 {
     "name": "xtext-st-dsl-client",
-    "displayName": "Xtext VS Code example",
-    "description": "a simple ST DSL client for VS Code",
+    "displayName": "ST-DSL client for VS Code",
+    "description": "a StructuredText DSL client implementation for VS Code",
     "version": "0.1.1",
     "publisher": "bins",
     "icon": "images/xtext.png",
@@ -52,7 +52,22 @@
                 "command": "mydsl.b",
                 "title": "MyDsl Command B"
             }
-        ]
+        ],
+        "configuration": {
+          "title": "MyDSL 配置",
+          "properties": {
+            "mydsl.lsp.host": {
+              "type": "string",
+              "default": "127.0.0.1",
+              "description": "LSP 服务器的主机地址"
+            },
+            "mydsl.lsp.port": {
+              "type": "number",
+              "default": 5007,
+              "description": "LSP 服务器的端口号"
+            }
+        }
+      }
     },
     "devDependencies": {
         "@types/node": "^20.19.9",

@@ -43,7 +43,7 @@ public class RunServer {
 			};
 			return result;
 		};
-		Launcher<LanguageClient> launcher = createSocketLauncher(languageServer, LanguageClient.class, new InetSocketAddress("localhost", 5007), Executors.newCachedThreadPool(), wrapper);
+		Launcher<LanguageClient> launcher = createSocketLauncher(languageServer, LanguageClient.class, new InetSocketAddress("0.0.0.0", 5007), Executors.newCachedThreadPool(), wrapper);
 		languageServer.connect(launcher.getRemoteProxy());
 		Future<?> future = launcher.startListening();
 		while (!future.isDone()) {
