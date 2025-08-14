@@ -2,3 +2,5 @@
 .gradle/**
 build/**
 *.gradle
+custom-linux-jre
+custom-windows-jre

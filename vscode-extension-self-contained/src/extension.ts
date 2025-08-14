@@ -10,6 +10,10 @@ import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-lan
 let lc: LanguageClient;
 
 export function activate(context: ExtensionContext) {
+    // use self-contained jre
+    const javaHomePath = context.asAbsolutePath(path.join('src', 'custom-jre'));
+    console.log(javaHomePath);
+
     // The server is a locally installed in src/mydsl
     let launcher = os.platform() === 'win32' ? 'mydsl-standalone.bat' : 'mydsl-standalone';
     const script = context.asAbsolutePath(path.join('src', 'mydsl', 'bin', launcher));
@@ -20,6 +24,11 @@ export function activate(context: ExtensionContext) {
             run: {
                 command: "cmd.exe",
                 args: ["/c", script],
+                options: {
+                    env: {
+                        JAVA_HOME: javaHomePath
+                    }
+                }
             },
             debug: {
                 command: "cmd.exe",
@@ -31,8 +40,22 @@ export function activate(context: ExtensionContext) {
         };
     } else {
         serverOptions = {
-            run: { command: script },
-            debug: { command: script, args: [], options: { env: createDebugEnv() } }
+            run: {
+                command: script,
+                args: [],
+                options: {
+                    env: {
+                        JAVA_HOME: javaHomePath
+                    }
+                }
+            },
+            debug: {
+                command: script,
+                args: [],
+                options: {
+                    env: createDebugEnv()
+                }
+            }
         };
     }
 
@@ -62,9 +85,17 @@ export function activate(context: ExtensionContext) {
     lc.setTrace(Trace.Verbose);
     lc.start();
 }
+
 export function deactivate() {
     return lc.stop();
 }
+
+function createEnv() {
+    return Object.assign({
+        JAVA_OPTS: "-Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=8000,suspend=n,quiet=y"
+    }, process.env)
+}
+
 function createDebugEnv() {
     return Object.assign({
         JAVA_OPTS: "-Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=8000,suspend=n,quiet=y"

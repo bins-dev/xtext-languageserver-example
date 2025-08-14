@@ -2,7 +2,7 @@
     "name": "xtext-st-dsl",
     "displayName": "Xtext for ST DSL",
     "description": "a StructuredText DSL implementation using Xtext framework for VS Code",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "publisher": "bins",
     "icon": "images/xtext.png",
     "license": "EPL-1.0",
