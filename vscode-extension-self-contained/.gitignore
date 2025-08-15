@@ -1,3 +1,5 @@
 *.jar
 *.vsix
 .vscode
+src/custom-jre
+src/bin
