@@ -7,7 +7,7 @@ tasks.register('copyApplication', Sync) {
 }
 
 tasks.register("copyJre",Sync){
-    from 'custom-windows-jre'
+    from 'custom-linux-jre'
     into 'src/custom-jre'
 }
 

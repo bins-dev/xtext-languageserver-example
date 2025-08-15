@@ -25,3 +25,6 @@ out/
 .gradle/
 build/
 !gradle-wrapper.jar
+
+# demo dir
+demo
