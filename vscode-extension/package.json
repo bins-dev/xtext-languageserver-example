@@ -2,7 +2,7 @@
     "name": "xtext-st-dsl-client",
     "displayName": "ST-DSL client for VS Code",
     "description": "a StructuredText DSL client implementation for VS Code",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "publisher": "bins",
     "icon": "images/xtext.png",
     "license": "EPL-1.0",

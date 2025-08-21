@@ -3,25 +3,359 @@
  */
 package org.xtext.example.mydsl.formatting2;
 
+import com.google.errorprone.annotations.Var;
 import org.eclipse.xtext.formatting2.AbstractJavaFormatter;
 import org.eclipse.xtext.formatting2.IFormattableDocument;
-import org.xtext.example.mydsl.structuredText.Greeting;
-import org.xtext.example.mydsl.structuredText.StructuredTextAlgorithm;
+import org.eclipse.xtext.formatting2.IHiddenRegionFormatter;
+import org.eclipse.xtext.formatting2.regionaccess.ISemanticRegion;
+import org.eclipse.xtext.xbase.lib.Pair;
+import org.xtext.example.mydsl.structuredText.*;
+
+import javax.swing.text.Segment;
 
 public class MyDslFormatter extends AbstractJavaFormatter {
 
-	protected void format(StructuredTextAlgorithm model, IFormattableDocument doc) {
-//		for (Greeting greeting : model.getLocalVariables()) {
-//			doc.format(greeting);
-//		}
-	}
-	
-	protected void format(Greeting model, IFormattableDocument doc) {
-		doc.prepend(model, it -> it.setNewLines(2));
-		if (model.getFrom() != null) {
-			doc.prepend(regionFor(model).keyword("from"), this::newLine);
-			doc.interior(regionFor(model).keyword("from"), regionFor(model).keyword("!"), this::indent);
-		}
-	}
-	
+    /**
+     * 文档根格式化
+     * 1.应去除VAR前多余的空行
+     * 2.VAR,END_VAR单独占用一行
+     * 3.VAR,END_VAR之间增加缩放
+     *
+     */
+    protected void format(StructuredTextAlgorithm model, IFormattableDocument doc) {
+        doc.prepend(model, it -> it.setSpace(""));
+        // "END_VAR"新起一行
+        doc.prepend(regionFor(model).keyword("END_VAR"), it -> it.setNewLines(1));
+        // 对VAR和END_VAR之间的内容添加缩进
+        doc.interior(regionFor(model).keyword("VAR"), regionFor(model).keyword("END_VAR"), this::indent);
+        // 格式化变量声明语句
+        for (VarDeclaration varDeclaration : model.getLocalVariables()) {
+            doc.format(varDeclaration);
+        }
+        // 获取语句列表
+        StatementList statementList = model.getStatements();
+        // 对每一个语句列表进行格式化
+        if (statementList != null) {
+            doc.format(statementList);
+        }
+    }
+
+    /**
+     * 本地变量格式化
+     * 1.每个变量声明占用一行
+     * 2.冒号前后一个空格
+     *
+     */
+    protected void format(LocalVariable model, IFormattableDocument doc) {
+
+        // 每个变量声明新开一行
+        doc.prepend(model, this::newLine);
+        // 在冒号前后添加一个空格
+        ISemanticRegion keyword = regionFor(model).keyword(":");
+        if (keyword != null) {
+            doc.prepend(keyword, it -> it.setSpace(" "));
+            doc.append(keyword, it -> it.setSpace(" "));
+        }
+    }
+
+    /**
+     * 语句List格式化
+     * 1.每个变量声明占用一行
+     *
+     */
+    protected void format(StatementList model, IFormattableDocument doc) {
+        for (Statement statement : model.getStatements()) {
+            doc.format(statement);
+        }
+    }
+
+    /**
+     * 赋值语句格式化
+     * 1.每个赋值语句占用一行
+     * 2.:=前后一个空格
+     *
+     */
+    protected void format(AssignmentStatement model, IFormattableDocument doc) {
+        doc.prepend(model, it -> it.setNewLines(1));
+        // 在:=前后添加一个空格
+        ISemanticRegion keyword = regionFor(model).keyword(":=");
+        if (keyword != null) {
+            doc.prepend(keyword, it -> it.setSpace(" "));
+            doc.append(keyword, it -> it.setSpace(" "));
+        }
+    }
+
+    /**
+     * IF语句格式化
+     */
+    protected void format(IfStatement model, IFormattableDocument doc) {
+
+        doc.prepend(model, it -> it.setNewLines(1));
+
+        ISemanticRegion ifKeyword = regionFor(model).keyword("IF");
+        ISemanticRegion thenKeyword = regionFor(model).keyword("THEN");
+        ISemanticRegion endIfKeyword = regionFor(model).keyword("END_IF");
+
+        // IF后一个空格
+        doc.append(ifKeyword, it -> it.setSpace(" "));
+        // THEN前一个空格
+        doc.prepend(thenKeyword, it -> it.setSpace(" "));
+        // END_IF新开一行
+        doc.prepend(endIfKeyword, it -> it.setNewLines(1));
+
+        // IF-THEN下的语句格式化
+        StatementList statementList = model.getStatments();
+        if (statementList != null) {
+            doc.format(statementList);
+        }
+
+        ISemanticRegion firstKeyword = thenKeyword;
+        ISemanticRegion secondKeyword = endIfKeyword;
+
+        ElseClause elseClause = model.getElse();
+
+        if (model.getElseif() != null && elseClause != null) {
+            // elseif 语句格式化
+            for (ElseIfClause elseIfClause : model.getElseif()) {
+                secondKeyword = regionFor(elseIfClause).keyword("ELSIF");
+                doc.interior(firstKeyword, secondKeyword, this::indent);
+                firstKeyword = regionFor(elseIfClause).keyword("THEN");
+                doc.format(elseIfClause);
+            }
+            // else 语句格式化
+            secondKeyword = regionFor(elseClause).keyword("ELSE");
+            doc.interior(firstKeyword, secondKeyword, this::indent);
+            doc.format(elseClause);
+            firstKeyword = secondKeyword;
+            secondKeyword = endIfKeyword;
+            doc.interior(firstKeyword, secondKeyword, this::indent);
+        }
+
+        if (model.getElseif() != null && elseClause == null) {
+            // elseif 语句格式化
+            for (ElseIfClause elseIfClause : model.getElseif()) {
+                secondKeyword = regionFor(elseIfClause).keyword("ELSIF");
+                doc.interior(firstKeyword, secondKeyword, this::indent);
+                firstKeyword = regionFor(elseIfClause).keyword("THEN");
+                doc.format(elseIfClause);
+            }
+            doc.interior(firstKeyword, endIfKeyword, this::indent);
+        }
+
+        if (model.getElseif() == null && elseClause != null) {
+            // else 语句格式化
+            secondKeyword = regionFor(elseClause).keyword("ELSE");
+            doc.interior(firstKeyword, secondKeyword, this::indent);
+            doc.format(elseClause);
+            firstKeyword = secondKeyword;
+            secondKeyword = endIfKeyword;
+            doc.interior(firstKeyword, secondKeyword, this::indent);
+        }
+
+        if (model.getElseif() == null && elseClause == null) {
+            doc.interior(thenKeyword, endIfKeyword, this::indent);
+        }
+
+
+        // Expression格式化
+        Expression expression = model.getExpression();
+        if (expression != null) {
+            doc.format(expression);
+        }
+    }
+
+    /**
+     * ELSIF语句格式化
+     */
+    protected void format(ElseIfClause model, IFormattableDocument doc) {
+        doc.prepend(model, it -> it.setNewLines(1));
+        ISemanticRegion elseIfKeyword = regionFor(model).keyword("ELSIF");
+        ISemanticRegion thenKeyword = regionFor(model).keyword("THEN");
+
+        // ELSIF 后加一个空格
+        doc.append(elseIfKeyword, it -> it.setSpace(" "));
+        // THEN 前加一个空格
+        doc.prepend(thenKeyword, it -> it.setSpace(" "));
+
+        StatementList statementList = model.getStatements();
+        if (statementList != null) {
+            doc.format(statementList);
+        }
+    }
+
+    /**
+     * ELSE语句格式化
+     */
+    protected void format(ElseClause model, IFormattableDocument doc) {
+        doc.prepend(model, it -> it.setNewLines(1));
+
+        StatementList statementList = model.getStatements();
+        if (statementList != null) {
+            doc.format(statementList);
+        }
+    }
+
+    /**
+     * Expression语句格式化
+     */
+    protected void format(Expression model, IFormattableDocument doc) {
+    }
+
+    /**
+     * Case语句格式化
+     */
+    protected void format(CaseStatement model, IFormattableDocument doc) {
+
+        // 新开一行
+        doc.prepend(model, it -> it.setNewLines(1));
+
+        ISemanticRegion caseKeyword = regionFor(model).keyword("CASE");
+        ISemanticRegion ofKeyword = regionFor(model).keyword("OF");
+        ISemanticRegion endCaseKeyword = regionFor(model).keyword("END_CASE");
+
+        // CASE后一个空格
+        doc.append(caseKeyword, it -> it.setSpace(" "));
+        // OF前一个空格
+        doc.prepend(ofKeyword, it -> it.setSpace(" "));
+        // END_CASE新开一行
+        doc.prepend(endCaseKeyword, it -> it.setNewLines(1));
+
+        doc.interior(ofKeyword, endCaseKeyword, this::indent);
+
+        // CaseSelection下的语句格式化
+        for (CaseClause caseClause : model.getCase()) {
+            doc.format(caseClause);
+        }
+
+        // else 语句格式化
+        ElseClause elseClause = model.getElse();
+        if (elseClause != null) {
+            doc.format(elseClause);
+        }
+
+        // Expression格式化
+        Expression expression = model.getExpression();
+        if (expression != null) {
+            doc.format(expression);
+        }
+    }
+
+    /**
+     * CaseClause格式化
+     */
+    protected void format(CaseClause model, IFormattableDocument doc) {
+
+        doc.prepend(model, it -> it.setNewLines(1));
+
+        ISemanticRegion keyword = regionFor(model).keyword(":");
+        doc.append(keyword, it -> {
+            it.setNewLines(1);
+        });
+
+        StatementList statementList = model.getStatements();
+        if (statementList != null) {
+            doc.format(statementList);
+        }
+    }
+
+    /**
+     * For格式化
+     */
+    protected void format(ForStatement model, IFormattableDocument doc) {
+        doc.prepend(model, it -> it.setNewLines(1));
+
+        ISemanticRegion forKeyword = regionFor(model).keyword("FOR");
+        ISemanticRegion toKeyword = regionFor(model).keyword("TO");
+        ISemanticRegion byKeyword = regionFor(model).keyword("BY");
+        ISemanticRegion doKeyword = regionFor(model).keyword("DO");
+        ISemanticRegion endForKeyword = regionFor(model).keyword("END_FOR");
+
+        doc.append(forKeyword, it -> it.setSpace(" "));
+        doc.prepend(toKeyword, it -> it.setSpace(" "));
+        doc.append(toKeyword, it -> it.setSpace(" "));
+        if (byKeyword != null) {
+            doc.prepend(byKeyword, it -> it.setSpace(" "));
+            doc.append(byKeyword, it -> it.setSpace(" "));
+        }
+        doc.prepend(doKeyword, it -> it.setSpace(" "));
+        doc.append(doKeyword, it -> it.setNewLines(1));
+
+        doc.interior(doKeyword, endForKeyword, this::indent);
+
+        StatementList statementList = model.getStatements();
+        if (statementList != null) {
+            doc.format(statementList);
+        }
+    }
+
+    /**
+     * While格式化
+     */
+    protected void format(WhileStatement model, IFormattableDocument doc) {
+        doc.prepend(model, it -> it.setNewLines(1));
+
+        ISemanticRegion whileKeyword = regionFor(model).keyword("WHILE");
+        ISemanticRegion doKeyword = regionFor(model).keyword("DO");
+        ISemanticRegion endWhileKeyword = regionFor(model).keyword("END_WHILE");
+
+        doc.append(whileKeyword, it -> it.setSpace(" "));
+        doc.prepend(doKeyword, it -> it.setSpace(" "));
+        doc.append(doKeyword, it -> it.setNewLines(1));
+        doc.prepend(endWhileKeyword, it -> it.setNewLines(1));
+
+        doc.interior(doKeyword, endWhileKeyword, this::indent);
+
+        StatementList statementList = model.getStatements();
+        if (statementList != null) {
+            doc.format(statementList);
+        }
+        Expression expression = model.getExpression();
+        if (expression != null) {
+            doc.format(expression);
+        }
+    }
+
+    /**
+     * Repeat格式化
+     */
+    protected void format(RepeatStatement model, IFormattableDocument doc) {
+
+        doc.prepend(model, it -> it.setNewLines(1));
+
+        ISemanticRegion repeatKeyword = regionFor(model).keyword("REPEAT");
+        ISemanticRegion untilKeyword = regionFor(model).keyword("UNTIL");
+        ISemanticRegion endRepeatKeyword = regionFor(model).keyword("END_REPEAT");
+
+        doc.append(repeatKeyword, it -> it.setNewLines(1));
+        doc.prepend(untilKeyword, it -> it.setNewLines(1));
+        doc.prepend(endRepeatKeyword, it -> it.setNewLines(1));
+
+        doc.interior(repeatKeyword, untilKeyword, this::indent);
+        doc.interior(untilKeyword, endRepeatKeyword, this::indent);
+
+        StatementList statementList = model.getStatements();
+        if (statementList != null) {
+            doc.format(statementList);
+        }
+        Expression expression = model.getExpression();
+        if (expression != null) {
+            doc.format(expression);
+        }
+    }
+
+    /**
+     * EXIT
+     */
+    protected void format(ExitStatement model, IFormattableDocument doc) {
+        doc.prepend(model, it -> it.setNewLines(1));
+    }
+
+    /**
+     * CONTINUE
+     */
+    protected void format(ContinueStatement model, IFormattableDocument doc) {
+        doc.prepend(model, it -> it.setNewLines(1));
+    }
+
+
 }
